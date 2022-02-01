@@ -1,0 +1,41 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        applicationId "com.redkey.keyboard"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+    }
+    buildFeatures {
+        viewBinding true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    sourceSets {
+        main.java.srcDirs = ['src/main/kotlin']
+    }
+}
+
+dependencies {
+    implementation 'com.bluelinelabs:conductor:2.1.5'
+    implementation("com.bluelinelabs:conductor-support:2.1.5") {
+        exclude group: "com.android.support"
+    }
+    implementation "org.reduxkotlin:redux-kotlin-threadsafe-jvm:0.5.5"
+    implementation "com.mikepenz:fastadapter:5.3.2"
+    implementation "com.mikepenz:fastadapter-extensions-binding:5.3.2"
+}
