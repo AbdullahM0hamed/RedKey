@@ -38,4 +38,6 @@ dependencies {
     implementation "org.reduxkotlin:redux-kotlin-threadsafe-jvm:0.5.5"
     implementation "com.mikepenz:fastadapter:5.3.2"
     implementation "com.mikepenz:fastadapter-extensions-binding:5.3.2"
+    implementation 'com.google.android.material:material:1.6.0-alpha01'
+    implementation "androidx.constraintlayout:constraintlayout:2.1.2"
 }
