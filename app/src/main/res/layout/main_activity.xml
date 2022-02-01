@@ -18,7 +18,6 @@
             android:background="#ffab1514"
             android:layout_width="fill_parent"
             android:layout_height="?actionBarSize"
-            app:navigationIcon="@drawable/ic_menu_24dp"
             app:title="@string/app_name"
             app:titleTextColor="@android:color/white"
             style="@style/Widget.MaterialComponents.Toolbar.Primary" />
