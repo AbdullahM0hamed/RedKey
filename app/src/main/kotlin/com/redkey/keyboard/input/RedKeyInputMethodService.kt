@@ -4,7 +4,7 @@ import android.inputmethodservice.InputMethodService
 import android.view.View
 import com.redkey.keyboard.databinding.KeyboardViewBinding
 
-class RedKeyInputMethodService : InputMethodService, View.OnClickListener {
+class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
         val binding = KeyboardViewBinding.inflate(layoutInflater)
         setupListeners(binding)
