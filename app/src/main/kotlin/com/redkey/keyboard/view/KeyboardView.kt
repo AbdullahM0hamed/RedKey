@@ -12,7 +12,7 @@ class KeyboardView(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int
     ) {
-        setMeasuredDimension(100, 100)
+        setMeasuredDimension(575, 720)
     }
 
     override fun onDraw(canvas: Canvas) {
