@@ -1,6 +1,7 @@
 package com.redkey.keyboard.input
 
 import android.inputmethodservice.InputMethodService
+import android.inputmethodservice.Keyboard
 import android.view.View
 import android.view.ViewGroup.LayoutParams
 import com.redkey.keyboard.R
@@ -9,6 +10,7 @@ import com.redkey.keyboard.databinding.KeyboardViewBinding
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
         val binding = KeyboardViewBinding.inflate(layoutInflater)
+        binding.keyboardView.setKeyboard(Keyboard(this, R.xml.number_pad))
         return binding.keyboardView
     }
 
