@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<android.inputmethodservice.KeyboardView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/constraint"
-    android:background="@android:color/black"
-    android:layout_width="100dp"
-    android:layout_height="100dp" />
+    android:id="@+id/keyboard_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:keyPreviewLayout="@layout/key_preview"
+    android:layout_alignParentBottom="true">
+
+</android.inputmethodservice.KeyboardView>
