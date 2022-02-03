@@ -5,7 +5,7 @@ import android.view.View
 
 class KeyboardView(
     val ctx: Context
-) : View(context) {
+) : View(ctx) {
 
     override fun onMeasure(
         widthMeasureSpec: Int,
