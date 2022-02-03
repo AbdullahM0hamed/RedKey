@@ -24,7 +24,7 @@ class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     }
     
     private fun setViewHeightDp(view: View, height: Float) {
-        val d = service.resources.displayMetrics.density
+        val d = resources.displayMetrics.density
         val px = height * d + 0.5f
 
         view.setLayoutParams(LayoutParams(-1, px.toInt()))
