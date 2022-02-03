@@ -16,7 +16,7 @@ class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
         //TODO: Handle button presses
     }
 
-    private fun setupListeners(binding: KeyboardViewBinding) {
+    private fun setupListeners(view: KeyboardView) {
         //TODO: Setup listeners
     }
 }
