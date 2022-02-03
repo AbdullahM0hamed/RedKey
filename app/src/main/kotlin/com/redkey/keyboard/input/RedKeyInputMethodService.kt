@@ -9,7 +9,7 @@ import com.redkey.keyboard.databinding.KeyboardViewBinding
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
         val binding = KeyboardViewBinding.inflate(layoutInflater)
-        setViewHeightDp(binding.root, 100)
+        setViewHeightDp(binding.root, 100f)
         android.widget.Toast.makeText(this, binding.root.height.toString(), 5).show()
 
         return binding.constraint
