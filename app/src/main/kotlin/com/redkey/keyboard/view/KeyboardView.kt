@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.View
 
 class KeyboardView(
-    val context: Context
+    val ctx: Context
 ) : View(context) {
 
     override fun onMeasure(
