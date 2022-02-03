@@ -5,13 +5,11 @@ import android.inputmethodservice.Keyboard
 import android.view.View
 import android.view.ViewGroup.LayoutParams
 import com.redkey.keyboard.R
-import com.redkey.keyboard.databinding.KeyboardViewBinding
+import com.redkey.keyboard.view.KeyboardView
 
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
-        val binding = KeyboardViewBinding.inflate(layoutInflater)
-        binding.keyboardView.setKeyboard(Keyboard(this, R.xml.number_pad))
-        return binding.keyboardView
+        return KeyboardView(this)
     }
 
     override fun onClick(view: View) {
