@@ -12,7 +12,8 @@ class KeyboardView(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int
     ) {
-        setMeasuredDimension(575, 720)
+        val width = ctx.resources.displayMetrics.widthPixels
+        setMeasuredDimension(width, 720)
     }
 
     override fun onDraw(canvas: Canvas) {
