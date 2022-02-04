@@ -14,7 +14,7 @@ class KeyboardView(
     ) {
         val width = ctx.resources.displayMetrics.widthPixels
         val height = ctx.resources.displayMetrics.heightPixels
-        setMeasuredDimension(width, (0.3 * height).toInt())
+        setMeasuredDimension(width, (0.45 * height).toInt())
     }
 
     override fun onDraw(canvas: Canvas) {
