@@ -10,8 +10,6 @@ class KeyboardView(
 ) : RelativeLayout(ctx) {
 
     val paint = Paint()
-    paint.color = 0xFF000000.toInt()
-    paint.strokeWidth = 1f
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -24,6 +22,8 @@ class KeyboardView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        paint.color = 0xFF000000.toInt()
+        paint.strokeWidth = 1f
         canvas.drawColor(0xFFFF0000.toInt())
         canvas.drawRect(0f, 0f, width.toFloat(), (height / 5).toFloat(), paint)
     }
