@@ -8,14 +8,7 @@ import com.redkey.keyboard.view.KeyboardView
 
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
-        val keyboard = KeyboardView(this)
-        keyboard.setBackgroundColor(0xFFFF0000.toInt())
-        val view = View(this)
-        view.layoutParams = LayoutParams(keyboard.width, keyboard.height / 5)
-        view.setBackgroundColor(0xFFFFFFFF.toInt())
-
-        keyboard.addView(view)
-        return keyboard
+        return KeyboardView(this)
     }
 
     override fun onClick(view: View) {
