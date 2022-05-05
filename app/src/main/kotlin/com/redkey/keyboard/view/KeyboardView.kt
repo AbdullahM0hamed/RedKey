@@ -2,11 +2,11 @@ package com.redkey.keyboard.view
 
 import android.content.Context
 import android.graphics.Canvas
-import android.view.View
+import android.widget.RelativeLayout
 
 class KeyboardView(
     val ctx: Context
-) : View(ctx) {
+) : RelativeLayout(ctx) {
 
     override fun onMeasure(
         widthMeasureSpec: Int,
