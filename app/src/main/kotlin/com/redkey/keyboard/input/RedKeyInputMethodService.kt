@@ -15,7 +15,7 @@ class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
         view.setBackgroundColor(0xFFFFFFFF.toInt())
 
         keyboard.addView(view)
-        return KeyboardView(this)
+        return keyboard
     }
 
     override fun onClick(view: View) {
