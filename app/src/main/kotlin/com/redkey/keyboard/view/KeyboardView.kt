@@ -32,9 +32,15 @@ class KeyboardView(
         canvas.drawColor(0xFFFF0000.toInt())
 
         //canvas.drawRect(0f, 0f, width.toFloat(), (height / 5).toFloat(), Paint())
-        val paint = Paint()
-        paint.color = 0xFF00FF00.toInt()
+        //val paint = Paint()
+        //paint.color = 0xFF00FF00.toInt()
 
-        canvas.drawText("1", 0, 1, (width / 2).toFloat(), 0f, paint)
+        //canvas.drawText("1", 0, 1, (width / 2).toFloat(), 0f, paint)
+
+        canvas.save()
+        val button = Button(ctx)
+        button.text = "Test"
+        button.draw(canvas)
+        canvas.restore()
     }
 }
