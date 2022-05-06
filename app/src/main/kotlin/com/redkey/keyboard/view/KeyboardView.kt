@@ -3,13 +3,19 @@ package com.redkey.keyboard.view
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.widget.RelativeLayout
+import android.widget.Button
+import android.widget.GridLayout
 
 class KeyboardView(
     val ctx: Context
-) : RelativeLayout(ctx) {
+) : GridLayout(ctx) {
 
-    val paint = Paint()
+    init {
+        val button = Button(ctx)
+        button.text = "Test"
+
+        addView(button)
+    }
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -22,9 +28,5 @@ class KeyboardView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        paint.color = 0xFF000000.toInt()
-        paint.strokeWidth = 1f
-        canvas.drawColor(0xFFFF0000.toInt())
-        canvas.drawRect(0f, 0f, width.toFloat(), 20f, paint)
     }
 }
