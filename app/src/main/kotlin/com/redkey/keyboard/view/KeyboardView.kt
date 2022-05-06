@@ -37,10 +37,10 @@ class KeyboardView(
 
         //canvas.drawText("1", 0, 1, (width / 2).toFloat(), 0f, paint)
 
-        canvas.save()
+        //canvas.save()
         val button = Button(ctx)
         button.text = "Test"
         button.draw(canvas)
-        canvas.restore()
+        //canvas.restore()
     }
 }
