@@ -11,12 +11,12 @@ class KeyboardView(
     val ctx: Context
 ) : View(ctx) {
 
-    init {
-        val button = Button(ctx)
-        button.text = "Test"
+    //init {
+        //val button = Button(ctx)
+        //button.text = "Test"
 
-        addView(button)
-    }
+        //addView(button)
+    //}
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -30,6 +30,6 @@ class KeyboardView(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawColor(0xFFFF0000.toInt())
-        //canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint())
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint())
     }
 }
