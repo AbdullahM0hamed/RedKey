@@ -11,12 +11,12 @@ class KeyboardView(
     val ctx: Context
 ) : View(ctx) {
 
-    //init {
-        //val button = Button(ctx)
-        //button.text = "Test"
+    init {
+        val button = Button(ctx)
+        button.text = "Test"
 
-        //addView(button)
-    //}
+        addView(button)
+    }
 
     override fun onMeasure(
         widthMeasureSpec: Int,
