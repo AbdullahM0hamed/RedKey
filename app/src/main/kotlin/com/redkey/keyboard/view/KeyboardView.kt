@@ -30,6 +30,8 @@ class KeyboardView(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawColor(0xFFFF0000.toInt())
-        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint())
+        //canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint())
+
+        canvas.drawRect(0f, 0f, width.toFloat(), (height / 5).toFloat(), Paint())
     }
 }
