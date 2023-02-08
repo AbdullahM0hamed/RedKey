@@ -1,6 +1,7 @@
 package com.redkey.keyboard.input
 
 import android.inputmethodservice.InputMethodService
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams
 import com.redkey.keyboard.R
@@ -8,14 +9,13 @@ import com.redkey.keyboard.view.KeyboardView
 
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
-        return KeyboardView(this)
+        val keyboard = KeyboardView(this, currentInputConnection, listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"))
+        return keyboard
     }
 
     override fun onClick(view: View) {
-        //TODO: Handle button presses
     }
 
     private fun setupListeners(view: KeyboardView) {
-        //TODO: Setup listeners
     }
 }
