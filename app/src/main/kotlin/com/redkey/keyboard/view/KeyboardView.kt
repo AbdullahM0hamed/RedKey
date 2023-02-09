@@ -8,13 +8,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
-import android.view.inputmethod.InputConnection
+import android.inputmethodservice.InputMethodService
 import android.widget.Button
 import android.widget.GridLayout
 
 class KeyboardView(
-    val ctx: Context,
-    val connection: InputConnection,
+    val ctx: InputMethodService,
     val keys: List<List<String>>
 ) : ViewGroup(ctx) {
 
@@ -25,7 +24,7 @@ class KeyboardView(
             val col = Math.ceil(e.x.toDouble() / (width / largest.size).toDouble()).toInt() - 1
 
             if (rowVal < keys.size && col < keys[rowVal].size) {
-                connection.commitText(keys[rowVal][col], 1)
+                ctx.currentInputConnection.commitText(keys[rowVal][col], 1)
             }
         }
 
