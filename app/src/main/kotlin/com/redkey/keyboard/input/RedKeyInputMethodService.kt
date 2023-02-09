@@ -9,7 +9,7 @@ import com.redkey.keyboard.view.KeyboardView
 
 class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
     override fun onCreateInputView(): View {
-        val keyboard = KeyboardView(this, currentInputConnection, listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"))
+        val keyboard = KeyboardView(this, currentInputConnection, listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")))
         return keyboard
     }
 

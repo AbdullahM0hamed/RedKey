@@ -15,15 +15,17 @@ import android.widget.GridLayout
 class KeyboardView(
     val ctx: Context,
     val connection: InputConnection,
-    val keys: List<String>
+    val keys: List<List<String>>
 ) : ViewGroup(ctx) {
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
         if (e?.action == MotionEvent.ACTION_DOWN) {
-            keys.forEachIndexed { i, key ->
-                if (e.x <= (width / keys.size) * (i + 1) && e.x > (width / keys.size) * i) {
-                    connection.commitText(key, 1)
-                }
+            val largest = keys.sortedBy { it.size }.get(keys.size - 1)
+            val rowVal = Math.ceil(e.y.toDouble() / (height / 5).toDouble()).toInt() - 1
+            val col = Math.ceil(e.x.toDouble() / (width / largest.size).toDouble()).toInt() - 1
+
+            if (rowVal < keys.size && col < keys[rowVal].size) {
+                connection.commitText(keys[rowVal][col], 1)
             }
         }
 
@@ -50,12 +52,14 @@ class KeyboardView(
         val paint2 = Paint()
         paint2.color = 0xFFFF0000.toInt()
         paint2.textSize = 24f
-        keys.forEachIndexed { i, key ->
-            val rect = RectF(((canvas.width / keys.size) * i).toFloat(), margin, ((canvas.width / keys.size) * (i + 1)).toFloat() - margin, (canvas.height / 5).toFloat() - margin)
-            canvas.drawRoundRect(rect, 20f, 20f, paint)
-            val textWidth = paint2.measureText(i.toString())
-            canvas.drawText(key, rect.centerX() - (textWidth / 2), rect.centerY(), paint2)
-        }	
+        keys.forEachIndexed { j, row ->
+            row.forEachIndexed { i, key ->
+                val rect = RectF(((canvas.width / row.size) * i).toFloat(), ((canvas.height / 5) * j).toFloat() + margin, ((canvas.width / row.size) * (i + 1)).toFloat() - margin, ((canvas.height / 5) * (j + 1)).toFloat() - margin)
+                canvas.drawRoundRect(rect, 20f, 20f, paint)
+                val textWidth = paint2.measureText(i.toString())
+                canvas.drawText(key, rect.centerX() - (textWidth / 2), rect.centerY(), paint2)
+            }
+        }
     }
 
     override fun onLayout(
