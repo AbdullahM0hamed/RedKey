@@ -9,8 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.inputmethodservice.InputMethodService
-import android.widget.Button
-import android.widget.GridLayout
 
 class KeyboardView(
     val ctx: InputMethodService,
@@ -18,12 +16,25 @@ class KeyboardView(
 ) : ViewGroup(ctx) {
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        if (e?.action == MotionEvent.ACTION_DOWN) {
+        if (e.action == MotionEvent.ACTION_DOWN) {
             val largest = keys.sortedBy { it.size }.get(keys.size - 1)
             val rowVal = Math.ceil(e.y.toDouble() / (height / 5).toDouble()).toInt() - 1
-            val col = Math.ceil(e.x.toDouble() / (width / largest.size).toDouble()).toInt() - 1
 
-            if (rowVal < keys.size && col < keys[rowVal].size) {
+            if (rowVal < keys.size) {
+                val shift = if (keys[rowVal].size < largest.size) {
+                    width / largest.size / 2
+                } else {
+                    0
+                }
+                val x = (e.x - shift).toDouble()
+                var col = Math.ceil(x / (width / largest.size).toDouble()).toInt() - 1
+
+                if (col < 0) {
+                    col = 0
+                } else if (col >= keys[rowVal].size) {
+                    col = keys[rowVal].size - 1
+                }
+
                 ctx.currentInputConnection.commitText(keys[rowVal][col], 1)
             }
         }
@@ -51,14 +62,52 @@ class KeyboardView(
         val paint2 = Paint()
         paint2.color = 0xFFFF0000.toInt()
         paint2.textSize = 24f
-        keys.forEachIndexed { j, row ->
-            row.forEachIndexed { i, key ->
-                val rect = RectF(((canvas.width / row.size) * i).toFloat(), ((canvas.height / 5) * j).toFloat() + margin, ((canvas.width / row.size) * (i + 1)).toFloat() - margin, ((canvas.height / 5) * (j + 1)).toFloat() - margin)
+        val largest = keys.sortedBy { it.size }.get(keys.size - 1)
+        keys.forEachIndexed { rowIndex, row ->
+            row.forEachIndexed { colIndex, key ->
+                val rect = getKeyRect(
+                    largest.size,
+                    row.size,
+                    canvas.width,
+                    canvas.height,
+                    rowIndex,
+                    colIndex,
+                    margin
+                )
                 canvas.drawRoundRect(rect, 20f, 20f, paint)
-                val textWidth = paint2.measureText(i.toString())
-                canvas.drawText(key, rect.centerX() - (textWidth / 2), rect.centerY(), paint2)
+                val textWidth = paint2.measureText(key)
+                canvas.drawText(
+                    key,
+                    rect.centerX() - (textWidth / 2),
+                    rect.centerY(),
+                    paint2
+                )
             }
         }
+    }
+
+    private fun getKeyRect(
+        largestSize: Int,
+        rowSize: Int,
+        width: Int,
+        height: Int,
+        row: Int,
+        col: Int,
+        margin: Float
+    ): RectF {
+        val rowShift = if (rowSize < largestSize) {
+            (width / largestSize / 2).toFloat()
+        } else {
+            0f
+        }
+
+        return RectF(
+            rowShift + ((width / largestSize) * col).toFloat(),
+            ((height / 5) * row).toFloat() + margin,
+            ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift,
+            ((height / 5) * (row + 1)).toFloat() - margin
+        )
+
     }
 
     override fun onLayout(
