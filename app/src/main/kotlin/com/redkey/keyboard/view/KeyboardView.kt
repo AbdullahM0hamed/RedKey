@@ -72,15 +72,68 @@ class KeyboardView(
                     canvas.height,
                     rowIndex,
                     colIndex,
-                    margin
+                    margin,
+                    isExtraWidth(key)
                 )
                 canvas.drawRoundRect(rect, 20f, 20f, paint)
-                val textWidth = paint2.measureText(key)
+                drawKey(
+                    canvas,
+                    paint2,
+                    key,
+                    rect
+                )
+            }
+        }
+    }
+
+    private fun isExtraWidth(key: String): Boolean {
+        return listOf("SHIFT", "BACKSPACE").contains(key)
+    }
+
+    private fun drawKey(
+        canvas: Canvas,
+        paint: Paint,
+        key: String,
+        rect: RectF
+    ) {
+        when (key) {
+            "SHIFT" -> {
+                val icon = "⇧"
+                val textSize = paint.textSize
+                paint.textSize = (textSize * 1.5).toFloat()
+                val textWidth = paint.measureText(icon)
+                val fm = paint.fontMetrics
+                val textHeight = fm.ascent - fm.descent
+                canvas.drawText(
+                    icon,
+                    rect.centerX() - (textWidth / 2),
+                    rect.centerY() - (textHeight / 3),
+                    paint
+                )
+                paint.textSize = textSize
+            }
+            "BACKSPACE" -> {
+                val icon = "⌫"
+                val textSize = paint.textSize
+                paint.textSize = (textSize * 1.5).toFloat()
+                val textWidth = paint.measureText(icon)
+                val fm = paint.fontMetrics
+                val textHeight = fm.ascent - fm.descent
+                canvas.drawText(
+                    icon,
+                    rect.centerX() - (textWidth / 2),
+                    rect.centerY() - (textHeight / 3),
+                    paint
+                )
+                paint.textSize = textSize
+            }
+            else -> {
+                val textWidth = paint.measureText(key)
                 canvas.drawText(
                     key,
                     rect.centerX() - (textWidth / 2),
                     rect.centerY(),
-                    paint2
+                    paint
                 )
             }
         }
@@ -93,7 +146,8 @@ class KeyboardView(
         height: Int,
         row: Int,
         col: Int,
-        margin: Float
+        margin: Float,
+        isExtraWidth: Boolean
     ): RectF {
         val rowShift = if (rowSize < largestSize) {
             (width / largestSize / 2).toFloat()
@@ -101,13 +155,29 @@ class KeyboardView(
             0f
         }
 
+        val isStartKey = col == 0
+        val left = if (isExtraWidth && isStartKey) {
+            0f
+        } else if (isExtraWidth && !isStartKey) {
+            rowShift + ((width / largestSize) * col).toFloat() + margin
+        } else {
+            rowShift + ((width / largestSize) * col).toFloat()
+        }
+
+        val right = if (isExtraWidth && isStartKey) {
+            ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift - margin
+        } else if (isExtraWidth && !isStartKey) {
+            width.toFloat()
+        } else {
+            ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift
+        }
+
         return RectF(
-            rowShift + ((width / largestSize) * col).toFloat(),
+            left,
             ((height / 5) * row).toFloat() + margin,
-            ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift,
+            right,
             ((height / 5) * (row + 1)).toFloat() - margin
         )
-
     }
 
     override fun onLayout(
