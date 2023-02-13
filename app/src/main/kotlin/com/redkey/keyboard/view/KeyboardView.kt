@@ -3,20 +3,35 @@ package com.redkey.keyboard.view
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.view.inputmethod.ExtractedTextRequest
 import android.inputmethodservice.InputMethodService
+import androidx.core.graphics.drawable.DrawableCompat
+import com.redkey.keyboard.R
 
 class KeyboardView(
     val ctx: InputMethodService,
     val keys: List<List<String>>
 ) : ViewGroup(ctx) {
 
+    private var shiftState = ShiftState.OFF
+    enum class ShiftState {
+        OFF, ON, LOCKED
+    }
+
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
         if (e.action == MotionEvent.ACTION_DOWN) {
+	    vibrate()
             val largest = keys.sortedBy { it.size }.get(keys.size - 1)
             val rowVal = Math.ceil(e.y.toDouble() / (height / 5).toDouble()).toInt() - 1
 
@@ -35,11 +50,45 @@ class KeyboardView(
                     col = keys[rowVal].size - 1
                 }
 
-                ctx.currentInputConnection.commitText(keys[rowVal][col], 1)
+                keyAction(keys[rowVal][col])
             }
         }
 
         return false
+    }
+
+    private fun vibrate() {
+            val vibrator = ctx.getSystemService(Vibrator::class.java)
+
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+	    } else {
+	        vibrator.vibrate(50)
+	    }
+    }
+
+    private fun keyAction(key: String) {
+        val connection = ctx.currentInputConnection
+        when (key) {
+            "SHIFT" -> {
+	        shiftState = ShiftState.values()[(shiftState.ordinal + 1) % ShiftState.values().size]
+		invalidate()
+	    }
+            "BACKSPACE" -> {
+                connection.deleteSurroundingText(1, 0)
+            }
+            else -> {
+	    	when (shiftState) {
+		    ShiftState.OFF -> connection.commitText(key.toLowerCase(), 1)
+		    ShiftState.ON -> {
+		        connection.commitText(key.toUpperCase(), 1)
+			shiftState = ShiftState.OFF
+			invalidate()
+		    }
+		    ShiftState.LOCKED -> connection.commitText(key.toUpperCase(), 1)
+		}
+	    }
+        }
     }
 
     override fun onMeasure(
@@ -90,6 +139,24 @@ class KeyboardView(
         return listOf("SHIFT", "BACKSPACE").contains(key)
     }
 
+    private fun Canvas.drawIcon(
+        icon: Drawable,
+        rect: RectF
+    ) {
+        val width = rect.right - rect.left
+        val height = rect.bottom - rect.top
+        val bounds = Rect(
+            (rect.left + (width * 0.3)).toInt(),
+            (rect.top + (height * 0.3)).toInt(),
+            (rect.right - (width * 0.3)).toInt(),
+            (rect.bottom - (height * 0.3)).toInt()
+        )
+	val wrappedIcon = DrawableCompat.wrap(icon)
+	DrawableCompat.setTint(wrappedIcon, 0xFFFF0000.toInt())
+        wrappedIcon.bounds = bounds
+        wrappedIcon.draw(this)
+    }
+
     private fun drawKey(
         canvas: Canvas,
         paint: Paint,
@@ -98,39 +165,29 @@ class KeyboardView(
     ) {
         when (key) {
             "SHIFT" -> {
-                val icon = "⇧"
-                val textSize = paint.textSize
-                paint.textSize = (textSize * 1.5).toFloat()
-                val textWidth = paint.measureText(icon)
-                val fm = paint.fontMetrics
-                val textHeight = fm.ascent - fm.descent
-                canvas.drawText(
-                    icon,
-                    rect.centerX() - (textWidth / 2),
-                    rect.centerY() - (textHeight / 3),
-                    paint
-                )
-                paint.textSize = textSize
+                val icon = ctx.resources.getDrawable(
+		    when (shiftState) {
+		        ShiftState.OFF -> R.drawable.ic_shift
+			ShiftState.ON -> R.drawable.ic_shift_pressed
+			ShiftState.LOCKED -> R.drawable.ic_shift_locked
+		    },
+		    null
+		)
+                canvas.drawIcon(icon, rect)
             }
             "BACKSPACE" -> {
-                val icon = "⌫"
-                val textSize = paint.textSize
-                paint.textSize = (textSize * 1.5).toFloat()
-                val textWidth = paint.measureText(icon)
-                val fm = paint.fontMetrics
-                val textHeight = fm.ascent - fm.descent
-                canvas.drawText(
-                    icon,
-                    rect.centerX() - (textWidth / 2),
-                    rect.centerY() - (textHeight / 3),
-                    paint
-                )
-                paint.textSize = textSize
+                val icon = ctx.resources.getDrawable(R.drawable.ic_backspace, null)
+                canvas.drawIcon(icon, rect)
             }
             else -> {
-                val textWidth = paint.measureText(key)
+		val text = if (shiftState == ShiftState.OFF) {
+		    key.toLowerCase()
+		} else {
+		    key.toUpperCase()
+		}
+                val textWidth = paint.measureText(text)
                 canvas.drawText(
-                    key,
+                    text,
                     rect.centerX() - (textWidth / 2),
                     rect.centerY(),
                     paint
@@ -174,7 +231,7 @@ class KeyboardView(
 
         return RectF(
             left,
-            ((height / 5) * row).toFloat() + margin,
+            ((height / 5) * row).toFloat(),
             right,
             ((height / 5) * (row + 1)).toFloat() - margin
         )
