@@ -14,6 +14,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
 import android.inputmethodservice.InputMethodService
 import androidx.core.graphics.drawable.DrawableCompat
@@ -31,11 +32,25 @@ class KeyboardView(
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
         if (e.action == MotionEvent.ACTION_DOWN) {
-	    vibrate()
+            vibrate()
             val largest = keys.sortedBy { it.size }.get(keys.size - 1)
             val rowVal = Math.ceil(e.y.toDouble() / (height / 5).toDouble()).toInt() - 1
 
             if (rowVal < keys.size) {
+                if (keys[rowVal].contains("SPACE")) {
+                    if (spaceRow.isNotEmpty()) {
+                        for (pair in spaceRow) {
+                            val rect = pair.second
+                            if (e.x >= rect.left && e.x <= rect.right) {
+                                keyAction(pair.first)
+                                break
+                            }
+                        }
+                    }
+
+                    return false
+                }
+
                 val shift = if (keys[rowVal].size < largest.size) {
                     width / largest.size / 2
                 } else {
@@ -58,36 +73,42 @@ class KeyboardView(
     }
 
     private fun vibrate() {
-            val vibrator = ctx.getSystemService(Vibrator::class.java)
+        val vibrator = ctx.getSystemService(Vibrator::class.java)
 
-	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-	    } else {
-	        vibrator.vibrate(50)
-	    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            vibrator.vibrate(50)
+        }
     }
 
     private fun keyAction(key: String) {
         val connection = ctx.currentInputConnection
         when (key) {
             "SHIFT" -> {
-	        shiftState = ShiftState.values()[(shiftState.ordinal + 1) % ShiftState.values().size]
-		invalidate()
-	    }
+                shiftState = ShiftState.values()[(shiftState.ordinal + 1) % ShiftState.values().size]
+                invalidate()
+            }
             "BACKSPACE" -> {
                 connection.deleteSurroundingText(1, 0)
             }
+            "SPACE" -> connection.commitText(" ", 1)
+            "EMOJIS" -> {}
+            "NUMBERS" -> {}
+            "COMMA" -> connection.commitText(",", 1)
+            "PERIOD" -> connection.commitText(".", 1)
+            "ENTER" -> connection.commitText("\n", 1)
             else -> {
-	    	when (shiftState) {
-		    ShiftState.OFF -> connection.commitText(key.toLowerCase(), 1)
-		    ShiftState.ON -> {
-		        connection.commitText(key.toUpperCase(), 1)
-			shiftState = ShiftState.OFF
-			invalidate()
-		    }
-		    ShiftState.LOCKED -> connection.commitText(key.toUpperCase(), 1)
-		}
-	    }
+                when (shiftState) {
+                    ShiftState.OFF -> connection.commitText(key.toLowerCase(), 1)
+                    ShiftState.ON -> {
+                        connection.commitText(key.toUpperCase(), 1)
+                        shiftState = ShiftState.OFF
+                        invalidate()
+                    }
+                    ShiftState.LOCKED -> connection.commitText(key.toUpperCase(), 1)
+                }
+            }
         }
     }
 
@@ -102,6 +123,8 @@ class KeyboardView(
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
+        spaceShift = 0f
+        spaceRow.clear()
         canvas.drawColor(0xFF000000.toInt())
 
         val paint = Paint()
@@ -122,7 +145,9 @@ class KeyboardView(
                     rowIndex,
                     colIndex,
                     margin,
-                    isExtraWidth(key)
+                    isExtraWidth(key),
+                    row.contains("SPACE"),
+                    key == "SPACE"
                 )
                 canvas.drawRoundRect(rect, 20f, 20f, paint)
                 drawKey(
@@ -136,7 +161,7 @@ class KeyboardView(
     }
 
     private fun isExtraWidth(key: String): Boolean {
-        return listOf("SHIFT", "BACKSPACE").contains(key)
+        return listOf("SHIFT", "BACKSPACE", "ENTER").contains(key)
     }
 
     private fun Canvas.drawIcon(
@@ -145,14 +170,21 @@ class KeyboardView(
     ) {
         val width = rect.right - rect.left
         val height = rect.bottom - rect.top
+        val heightWidthRatio = icon.intrinsicHeight / icon.intrinsicWidth
+        val newWidth = (rect.right - rect.left) - (2 * (width * 0.3))
+        val newHeight = newWidth * heightWidthRatio
+        val top = (height - newHeight) / 2
+        val bottom = rect.bottom - top
         val bounds = Rect(
             (rect.left + (width * 0.3)).toInt(),
-            (rect.top + (height * 0.3)).toInt(),
+            //(rect.top + (height * 0.3)).toInt(),
+            (rect.top + top).toInt(),
             (rect.right - (width * 0.3)).toInt(),
-            (rect.bottom - (height * 0.3)).toInt()
+            //(rect.bottom - (height * 0.3)).toInt()
+            bottom.toInt()
         )
-	val wrappedIcon = DrawableCompat.wrap(icon)
-	DrawableCompat.setTint(wrappedIcon, 0xFFFF0000.toInt())
+        val wrappedIcon = DrawableCompat.wrap(icon)
+        DrawableCompat.setTint(wrappedIcon, 0xFFFF0000.toInt())
         wrappedIcon.bounds = bounds
         wrappedIcon.draw(this)
     }
@@ -166,36 +198,57 @@ class KeyboardView(
         when (key) {
             "SHIFT" -> {
                 val icon = ctx.resources.getDrawable(
-		    when (shiftState) {
-		        ShiftState.OFF -> R.drawable.ic_shift
-			ShiftState.ON -> R.drawable.ic_shift_pressed
-			ShiftState.LOCKED -> R.drawable.ic_shift_locked
-		    },
-		    null
-		)
+                    when (shiftState) {
+                        ShiftState.OFF -> R.drawable.ic_shift
+                        ShiftState.ON -> R.drawable.ic_shift_pressed
+                        ShiftState.LOCKED -> R.drawable.ic_shift_locked
+                    },
+                    null
+                )
                 canvas.drawIcon(icon, rect)
             }
             "BACKSPACE" -> {
                 val icon = ctx.resources.getDrawable(R.drawable.ic_backspace, null)
                 canvas.drawIcon(icon, rect)
             }
+            "NUMBERS" -> canvas.drawText("123", rect, paint)
+            "EMOJIS" -> {
+                val icon = ctx.resources.getDrawable(R.drawable.ic_emojis, null)
+                canvas.drawIcon(icon, rect)
+            }
+            "COMMA" -> canvas.drawText(",", rect, paint)
+            "SPACE" -> {}
+            "PERIOD" -> canvas.drawText(".", rect, paint)
+            "ENTER" -> {
+                canvas.drawText("↵", rect, paint)
+            }
             else -> {
-		val text = if (shiftState == ShiftState.OFF) {
-		    key.toLowerCase()
-		} else {
-		    key.toUpperCase()
-		}
-                val textWidth = paint.measureText(text)
-                canvas.drawText(
-                    text,
-                    rect.centerX() - (textWidth / 2),
-                    rect.centerY(),
-                    paint
-                )
+                val text = if (shiftState == ShiftState.OFF) {
+                    key.toLowerCase()
+                } else {
+                    key.toUpperCase()
+                }
+                canvas.drawText(text, rect, paint)
             }
         }
     }
 
+    private fun Canvas.drawText(
+        text: String,
+        rect: RectF,
+        paint: Paint
+    ) {
+        val textWidth = paint.measureText(text)
+        drawText(
+            text,
+            rect.centerX() - (textWidth / 2),
+            rect.centerY(),
+            paint
+        )
+    }
+
+    private var spaceShift = 0f
+    private var spaceRow = mutableListOf<Pair<String, RectF>>()
     private fun getKeyRect(
         largestSize: Int,
         rowSize: Int,
@@ -204,9 +257,11 @@ class KeyboardView(
         row: Int,
         col: Int,
         margin: Float,
-        isExtraWidth: Boolean
+        isExtraWidth: Boolean,
+        isSpaceRow: Boolean,
+        isSpace: Boolean
     ): RectF {
-        val rowShift = if (rowSize < largestSize) {
+        val rowShift = if (rowSize < largestSize && !isSpaceRow) {
             (width / largestSize / 2).toFloat()
         } else {
             0f
@@ -215,8 +270,10 @@ class KeyboardView(
         val isStartKey = col == 0
         val left = if (isExtraWidth && isStartKey) {
             0f
-        } else if (isExtraWidth && !isStartKey) {
+        } else if (isExtraWidth && !isStartKey && !isSpaceRow) {
             rowShift + ((width / largestSize) * col).toFloat() + margin
+        } else if (isExtraWidth && isSpaceRow) {
+            rowShift + ((width / largestSize) * col).toFloat()
         } else {
             rowShift + ((width / largestSize) * col).toFloat()
         }
@@ -224,17 +281,34 @@ class KeyboardView(
         val right = if (isExtraWidth && isStartKey) {
             ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift - margin
         } else if (isExtraWidth && !isStartKey) {
-            width.toFloat()
+            width.toFloat() - spaceShift
+        } else if (isSpace) {
+            width - (2.5 * (width / largestSize)).toFloat()
         } else {
             ((width / largestSize) * (col + 1)).toFloat() - margin + rowShift
         }
 
-        return RectF(
-            left,
+        val rect =  RectF(
+            left + spaceShift,
             ((height / 5) * row).toFloat(),
-            right,
+            right + spaceShift,
             ((height / 5) * (row + 1)).toFloat() - margin
         )
+
+        if (isSpaceRow) {
+            spaceRow.add(
+                Pair(
+                    keys[row][col],
+                    rect
+                )
+            )
+        }
+
+        if (isSpace) {
+            spaceShift = right - (((width / largestSize) * (col + 1)).toFloat() - margin + rowShift)
+        }
+
+        return rect
     }
 
     override fun onLayout(
