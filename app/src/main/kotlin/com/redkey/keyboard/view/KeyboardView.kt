@@ -220,7 +220,8 @@ class KeyboardView(
             "SPACE" -> {}
             "PERIOD" -> canvas.drawText(".", rect, paint)
             "ENTER" -> {
-                canvas.drawText("↵", rect, paint)
+                val icon = ctx.resources.getDrawable(R.drawable.ic_enter, null)
+                canvas.drawIcon(icon, rect)
             }
             else -> {
                 val text = if (shiftState == ShiftState.OFF) {
