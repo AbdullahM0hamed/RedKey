@@ -2,6 +2,8 @@ WIP Keyboard app
 
 # TODO
 
+- [ ] - punctuation
+
 - [ ] - emoji support
 
 - [ ] - settings
