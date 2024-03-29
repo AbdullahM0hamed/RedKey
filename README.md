@@ -8,7 +8,7 @@ WIP Keyboard app
 
 - [ ] - settings
 
-- [ ] - app sends you to settings page to enable
+- [x] - app sends you to settings page to enable
 
 - [ ] - languages support
 

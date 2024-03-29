@@ -291,9 +291,9 @@ class KeyboardView(
 
         val rect =  RectF(
             left + spaceShift,
-            ((height / 5) * row).toFloat(),
+            ((height / 5) * row).toFloat() + margin,
             right + spaceShift,
-            ((height / 5) * (row + 1)).toFloat() - margin
+            ((height / 5) * (row + 1)).toFloat()
         )
 
         if (isSpaceRow) {
