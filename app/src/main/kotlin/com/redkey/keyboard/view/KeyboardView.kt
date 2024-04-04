@@ -7,6 +7,8 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.HapticFeedbackConstants
@@ -14,11 +16,18 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
+import android.view.inputmethod.InputConnection
 import android.inputmethodservice.InputMethodService
 import androidx.core.graphics.drawable.DrawableCompat
 import com.redkey.keyboard.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class KeyboardView(
     val ctx: InputMethodService,
@@ -30,7 +39,10 @@ class KeyboardView(
         OFF, ON, LOCKED
     }
 
-    override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
+    var job: Job? = null
+    var keyHeld = false
+    var backspace = false
+    override fun onTouchEvent(e: MotionEvent): Boolean {
         if (e.action == MotionEvent.ACTION_DOWN) {
             vibrate()
             val largest = keys.sortedBy { it.size }.get(keys.size - 1)
@@ -67,9 +79,15 @@ class KeyboardView(
 
                 keyAction(keys[rowVal][col])
             }
+        } else if (e.action == MotionEvent.ACTION_UP) {
+            keyHeld = false
+            job?.cancel()
+            if (backspace) {
+                ctx.currentInputConnection.erase(1, 0)
+            }
         }
 
-        return false
+        return true
     }
 
     private fun vibrate() {
@@ -90,23 +108,24 @@ class KeyboardView(
                 invalidate()
             }
             "BACKSPACE" -> {
-                connection.deleteSurroundingText(1, 0)
+                connection.deleteText(1, 0)
+                backspace = true
             }
-            "SPACE" -> connection.commitText(" ", 1)
+            "SPACE" -> connection.writeText(" ", 1)
             "EMOJIS" -> {}
             "NUMBERS" -> {}
-            "COMMA" -> connection.commitText(",", 1)
-            "PERIOD" -> connection.commitText(".", 1)
-            "ENTER" -> connection.commitText("\n", 1)
+            "COMMA" -> connection.writeText(",", 1)
+            "PERIOD" -> connection.writeText(".", 1)
+            "ENTER" -> connection.writeText("\n", 1)
             else -> {
                 when (shiftState) {
-                    ShiftState.OFF -> connection.commitText(key.toLowerCase(), 1)
+                    ShiftState.OFF -> connection.writeText(key.toLowerCase(), 1)
                     ShiftState.ON -> {
-                        connection.commitText(key.toUpperCase(), 1)
+                        connection.writeText(key.toUpperCase(), 1)
                         shiftState = ShiftState.OFF
                         invalidate()
                     }
-                    ShiftState.LOCKED -> connection.commitText(key.toUpperCase(), 1)
+                    ShiftState.LOCKED -> connection.writeText(key.toUpperCase(), 1)
                 }
             }
         }
@@ -319,5 +338,87 @@ class KeyboardView(
         oldWidth: Int,
         oldHeight: Int
     ) {
+    }
+
+    var composed = ""
+    var pos = 0
+    private fun InputConnection.writeText(text: String, position: Int) {
+        pos += position
+        if (text == " " || text == "\n") {
+            commitText(composed + text, position)
+            composed = ""
+        } else {
+            composed += text
+            setComposingText(composed, position)
+        }
+    }
+
+    private fun InputConnection.deleteText(before: Int, after: Int) {
+        keyHeld = true
+        job = GlobalScope.launch(Dispatchers.Main.immediate) {
+            while (keyHeld) {
+                delay(500L)
+                val extractedText = getExtractedText(ExtractedTextRequest(), 0)
+                var charPos = extractedText.selectionStart
+                if (charPos == 0) {
+                    break
+                }
+                var beforeCursor = extractedText.text[charPos - 1]
+                while (beforeCursor == ' ') {
+                    erase(before, after)
+                    charPos -= 1
+                    if (charPos == 0) {
+                        break
+                    }
+                    beforeCursor = extractedText.text[charPos - 1]
+                }
+
+                beforeCursor = extractedText.text[charPos - 1]
+                while (beforeCursor != ' ') {
+                    erase(before, after)
+                    charPos -= 1
+                    if (charPos == 0) {
+                        break
+                    }
+                    beforeCursor = extractedText.text[charPos - 1]
+                }
+            }
+        }
+    }
+
+    private fun InputConnection.erase(before: Int, after: Int) {
+        if (pos - before + after >= 0) {
+            pos = pos - before + after
+        }
+
+        backspace = false
+        if (selectionEnd != 0) {
+            commitText("", 1)
+        }
+
+        if (composed.isEmpty()) {
+            deleteSurroundingText(before, after)
+        } else {
+            composed = composed.dropLast(before)
+            setComposingText(composed, pos)
+        }
+        vibrate()
+    }
+
+    var selectionEnd = 0
+    public fun onUpdateCursorAnchorInfo(cursorAnchorInfo: CursorAnchorInfo) {
+        if (cursorAnchorInfo.selectionEnd != cursorAnchorInfo.selectionStart) {
+            selectionEnd = cursorAnchorInfo.selectionEnd
+        } else {
+            selectionEnd = 0
+        }
+
+        if (cursorAnchorInfo.selectionStart == pos) {
+            return
+        }
+
+        val connection = ctx.currentInputConnection
+        connection.finishComposingText()
+        composed = ""
     }
 }
