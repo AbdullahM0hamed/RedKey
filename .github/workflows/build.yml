@@ -31,6 +31,7 @@ jobs:
           echo "::add-matcher::.github/gradle-matcher.json"
           echo "::add-matcher::.github/kotlin-error-matcher.json"
           echo "::add-matcher::.github/kotlin-warning-matcher.json"
+          rm gradle.properties
           ./gradlew assembleRelease
 
       - name: Rename Artifact
