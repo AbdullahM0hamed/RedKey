@@ -23,17 +23,15 @@ import android.view.inputmethod.InputConnection
 import android.inputmethodservice.InputMethodService
 import androidx.core.graphics.drawable.DrawableCompat
 import com.redkey.keyboard.R
+import com.redkey.keyboard.util.KeyboardUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class KeyboardView(
-    val ctx: InputMethodService,
-    val keys: List<List<String>>
-) : ViewGroup(ctx) {
-
+class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
+    private var keys = KeyboardUtils.getKeys(0)
     private var shiftState = ShiftState.OFF
     enum class ShiftState {
         OFF, ON, LOCKED
