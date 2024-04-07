@@ -2,7 +2,7 @@ WIP Keyboard app
 
 # TODO
 
-- [ ] - punctuation
+- [x] - punctuation
 
 - [ ] - emoji support
 
