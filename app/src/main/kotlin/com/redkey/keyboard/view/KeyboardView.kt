@@ -31,51 +31,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
-    private var keys = KeyboardUtils.getKeys(0)
-    private var shiftState = ShiftState.OFF
-    enum class ShiftState {
+    public var page = 0
+    public var keys = KeyboardUtils.getKeys(page)
+    public var shiftState = ShiftState.OFF
+    public enum class ShiftState {
         OFF, ON, LOCKED
     }
 
+    var currentRects: MutableList<MutableList<Pair<String, RectF>>> = mutableListOf()
+    var rowCoords: MutableList<Pair<Float, Float>> = mutableListOf()
     var job: Job? = null
     var keyHeld = false
-    var backspace = false
+    public var backspace = false
     override fun onTouchEvent(e: MotionEvent): Boolean {
         if (e.action == MotionEvent.ACTION_DOWN) {
-            vibrate()
-            val largest = keys.sortedBy { it.size }.get(keys.size - 1)
-            val rowVal = Math.ceil(e.y.toDouble() / (height / 5).toDouble()).toInt() - 1
-
-            if (rowVal < keys.size) {
-                if (keys[rowVal].contains("SPACE")) {
-                    if (spaceRow.isNotEmpty()) {
-                        for (pair in spaceRow) {
-                            val rect = pair.second
-                            if (e.x >= rect.left && e.x <= rect.right) {
-                                keyAction(pair.first)
-                                break
-                            }
-                        }
-                    }
-
-                    return false
+            for ((i, coord) in rowCoords.withIndex()) {
+                if (e.y >= coord.first && e.y <= coord.second) {
+                    val col = getColumn(e.x, i)
+                    vibrate()
+                    KeyboardUtils.keyAction(ctx, this, currentRects[i][col].first)
+                    break
                 }
-
-                val shift = if (keys[rowVal].size < largest.size) {
-                    width / largest.size / 2
-                } else {
-                    0
-                }
-                val x = (e.x - shift).toDouble()
-                var col = Math.ceil(x / (width / largest.size).toDouble()).toInt() - 1
-
-                if (col < 0) {
-                    col = 0
-                } else if (col >= keys[rowVal].size) {
-                    col = keys[rowVal].size - 1
-                }
-
-                keyAction(keys[rowVal][col])
             }
         } else if (e.action == MotionEvent.ACTION_UP) {
             keyHeld = false
@@ -88,6 +64,24 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         return true
     }
 
+    private fun getColumn(x: Float, i: Int): Int {
+        var low = 0
+        var high = currentRects[i].size - 1
+
+        var mid: Int = 0
+        while (low <= high) {
+            mid = low + (high - low) / 2
+            val rect = currentRects[i][mid].second
+            when {
+                x >= rect.left && x <= rect.right -> return mid
+                x < rect.left -> high = mid - 1
+                x > rect.right -> low = mid + 1
+            }
+        }
+
+        return mid
+    }
+
     private fun vibrate() {
         val vibrator = ctx.getSystemService(Vibrator::class.java)
 
@@ -95,37 +89,6 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
             vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             vibrator.vibrate(50)
-        }
-    }
-
-    private fun keyAction(key: String) {
-        val connection = ctx.currentInputConnection
-        when (key) {
-            "SHIFT" -> {
-                shiftState = ShiftState.values()[(shiftState.ordinal + 1) % ShiftState.values().size]
-                invalidate()
-            }
-            "BACKSPACE" -> {
-                connection.deleteText(1, 0)
-                backspace = true
-            }
-            "SPACE" -> connection.writeText(" ", 1)
-            "EMOJIS" -> {}
-            "NUMBERS" -> {}
-            "COMMA" -> connection.writeText(",", 1)
-            "PERIOD" -> connection.writeText(".", 1)
-            "ENTER" -> connection.writeText("\n", 1)
-            else -> {
-                when (shiftState) {
-                    ShiftState.OFF -> connection.writeText(key.toLowerCase(), 1)
-                    ShiftState.ON -> {
-                        connection.writeText(key.toUpperCase(), 1)
-                        shiftState = ShiftState.OFF
-                        invalidate()
-                    }
-                    ShiftState.LOCKED -> connection.writeText(key.toUpperCase(), 1)
-                }
-            }
         }
     }
 
@@ -152,7 +115,10 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         paint2.color = 0xFFFF0000.toInt()
         paint2.textSize = 24f
         val largest = keys.sortedBy { it.size }.get(keys.size - 1)
+        currentRects.clear()
+        rowCoords.clear()
         keys.forEachIndexed { rowIndex, row ->
+            val gridRow: MutableList<Pair<String, RectF>> = mutableListOf()
             row.forEachIndexed { colIndex, key ->
                 val rect = getKeyRect(
                     largest.size,
@@ -164,105 +130,28 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
                     margin,
                     isExtraWidth(key),
                     row.contains("SPACE"),
-                    key == "SPACE"
+                    key == "SPACE",
+                    keys.size
                 )
+                gridRow.add(Pair(key, rect))
                 canvas.drawRoundRect(rect, 20f, 20f, paint)
-                drawKey(
+                KeyboardUtils.drawKey(
+                    ctx,
+                    this,
                     canvas,
                     paint2,
                     key,
                     rect
                 )
             }
+            currentRects.add(gridRow)
+            val first = gridRow[0].second
+            rowCoords.add(Pair(first.top, first.bottom))
         }
     }
 
     private fun isExtraWidth(key: String): Boolean {
         return listOf("SHIFT", "BACKSPACE", "ENTER").contains(key)
-    }
-
-    private fun Canvas.drawIcon(
-        icon: Drawable,
-        rect: RectF
-    ) {
-        val width = rect.right - rect.left
-        val height = rect.bottom - rect.top
-        val heightWidthRatio = icon.intrinsicHeight / icon.intrinsicWidth
-        val newWidth = (rect.right - rect.left) - (2 * (width * 0.3))
-        val newHeight = newWidth * heightWidthRatio
-        val top = (height - newHeight) / 2
-        val bottom = rect.bottom - top
-        val bounds = Rect(
-            (rect.left + (width * 0.3)).toInt(),
-            //(rect.top + (height * 0.3)).toInt(),
-            (rect.top + top).toInt(),
-            (rect.right - (width * 0.3)).toInt(),
-            //(rect.bottom - (height * 0.3)).toInt()
-            bottom.toInt()
-        )
-        val wrappedIcon = DrawableCompat.wrap(icon)
-        DrawableCompat.setTint(wrappedIcon, 0xFFFF0000.toInt())
-        wrappedIcon.bounds = bounds
-        wrappedIcon.draw(this)
-    }
-
-    private fun drawKey(
-        canvas: Canvas,
-        paint: Paint,
-        key: String,
-        rect: RectF
-    ) {
-        when (key) {
-            "SHIFT" -> {
-                val icon = ctx.resources.getDrawable(
-                    when (shiftState) {
-                        ShiftState.OFF -> R.drawable.ic_shift
-                        ShiftState.ON -> R.drawable.ic_shift_pressed
-                        ShiftState.LOCKED -> R.drawable.ic_shift_locked
-                    },
-                    null
-                )
-                canvas.drawIcon(icon, rect)
-            }
-            "BACKSPACE" -> {
-                val icon = ctx.resources.getDrawable(R.drawable.ic_backspace, null)
-                canvas.drawIcon(icon, rect)
-            }
-            "NUMBERS" -> canvas.drawText("123", rect, paint)
-            "EMOJIS" -> {
-                val icon = ctx.resources.getDrawable(R.drawable.ic_emojis, null)
-                canvas.drawIcon(icon, rect)
-            }
-            "COMMA" -> canvas.drawText(",", rect, paint)
-            "SPACE" -> {}
-            "PERIOD" -> canvas.drawText(".", rect, paint)
-            "ENTER" -> {
-                val icon = ctx.resources.getDrawable(R.drawable.ic_enter, null)
-                canvas.drawIcon(icon, rect)
-            }
-            else -> {
-                val text = if (shiftState == ShiftState.OFF) {
-                    key.toLowerCase()
-                } else {
-                    key.toUpperCase()
-                }
-                canvas.drawText(text, rect, paint)
-            }
-        }
-    }
-
-    private fun Canvas.drawText(
-        text: String,
-        rect: RectF,
-        paint: Paint
-    ) {
-        val textWidth = paint.measureText(text)
-        drawText(
-            text,
-            rect.centerX() - (textWidth / 2),
-            rect.centerY(),
-            paint
-        )
     }
 
     private var spaceShift = 0f
@@ -277,7 +166,8 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         margin: Float,
         isExtraWidth: Boolean,
         isSpaceRow: Boolean,
-        isSpace: Boolean
+        isSpace: Boolean,
+        rowCount: Int
     ): RectF {
         val rowShift = if (rowSize < largestSize && !isSpaceRow) {
             (width / largestSize / 2).toFloat()
@@ -308,9 +198,9 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
 
         val rect =  RectF(
             left + spaceShift,
-            ((height / 5) * row).toFloat() + margin,
+            ((height / rowCount) * row).toFloat() + margin,
             right + spaceShift,
-            ((height / 5) * (row + 1)).toFloat()
+            ((height / rowCount) * (row + 1)).toFloat()
         )
 
         if (isSpaceRow) {
@@ -340,30 +230,30 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
 
     var composed = ""
     var pos = 0
-    private fun InputConnection.writeText(text: String, position: Int) {
+    public fun writeText(conn: InputConnection, text: String, position: Int) {
         pos += position
         if (text == " " || text == "\n") {
-            commitText(composed + text, position)
+            conn.commitText(composed + text, position)
             composed = ""
         } else {
             composed += text
-            setComposingText(composed, position)
+            conn.setComposingText(composed, position)
         }
     }
 
-    private fun InputConnection.deleteText(before: Int, after: Int) {
+    public fun deleteText(conn: InputConnection, before: Int, after: Int) {
         keyHeld = true
         job = GlobalScope.launch(Dispatchers.Main.immediate) {
             while (keyHeld) {
                 delay(500L)
-                val extractedText = getExtractedText(ExtractedTextRequest(), 0)
+                val extractedText = conn.getExtractedText(ExtractedTextRequest(), 0)
                 var charPos = extractedText.selectionStart
                 if (charPos == 0) {
                     break
                 }
                 var beforeCursor = extractedText.text[charPos - 1]
                 while (beforeCursor == ' ') {
-                    erase(before, after)
+                    conn.erase(before, after)
                     charPos -= 1
                     if (charPos == 0) {
                         break
@@ -373,7 +263,7 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
 
                 beforeCursor = extractedText.text[charPos - 1]
                 while (beforeCursor != ' ') {
-                    erase(before, after)
+                    conn.erase(before, after)
                     charPos -= 1
                     if (charPos == 0) {
                         break
