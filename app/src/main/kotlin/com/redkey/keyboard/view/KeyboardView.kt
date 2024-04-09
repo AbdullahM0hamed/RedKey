@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.InputType
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -31,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
+    public var editor: EditorInfo? = null
     public var page = 0
     public var keys = KeyboardUtils.getKeys(page)
     public var shiftState = ShiftState.OFF
@@ -231,6 +233,12 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
     var composed = ""
     var pos = 0
     public fun writeText(conn: InputConnection, text: String, position: Int) {
+        if (editor != null && editor!!.inputType == InputType.TYPE_NULL) {
+            conn.commitText(text, position)
+            composed = ""
+            return
+        }
+
         pos += position
         if (text == " " || text == "\n") {
             conn.commitText(composed + text, position)
@@ -247,7 +255,10 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
             while (keyHeld) {
                 delay(500L)
                 val extractedText = conn.getExtractedText(ExtractedTextRequest(), 0)
-                var charPos = extractedText.selectionStart
+                var charPos = 0
+                try {
+                    charPos = extractedText.selectionStart
+                } catch (e: Exception) {}
                 if (charPos == 0) {
                     break
                 }

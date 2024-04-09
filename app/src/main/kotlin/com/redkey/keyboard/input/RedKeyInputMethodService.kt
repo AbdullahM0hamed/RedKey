@@ -18,6 +18,7 @@ class RedKeyInputMethodService : InputMethodService(), View.OnClickListener {
 
     override fun onStartInputView(editorInfo: EditorInfo, restart: Boolean) {
         currentInputConnection?.requestCursorUpdates(InputConnection.CURSOR_UPDATE_MONITOR)
+	keyboard?.editor = editorInfo
     }
 
     override fun onUpdateCursorAnchorInfo(cursorAnchorInfo: CursorAnchorInfo) {
