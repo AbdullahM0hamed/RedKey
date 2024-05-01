@@ -51,7 +51,7 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
                 if (e.y >= coord.first && e.y <= coord.second) {
                     val col = getColumn(e.x, i)
                     vibrate()
-                    KeyboardUtils.keyAction(ctx, this, currentRects[i][col].first)
+                    KeyboardUtils.keyAction(ctx, this, currentRects[i][col].first, currentRects[i][col].second)
                     break
                 }
             }

@@ -7,6 +7,12 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.inputmethodservice.InputMethodService
+import android.os.Handler
+import android.widget.PopupWindow
+import android.widget.TextView
+import android.view.Gravity
+import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.redkey.keyboard.R
 import com.redkey.keyboard.view.KeyboardView
@@ -40,7 +46,36 @@ object KeyboardUtils {
 
     public fun getKeys(page: Int): List<List<String>> = default[page]
 
-    public fun keyAction(ctx: InputMethodService, keyboard: KeyboardView, key: String) {
+    public fun keyAction(ctx: InputMethodService, keyboard: KeyboardView, key: String, rect: RectF) {
+        var popup: PopupWindow
+        if (key.length == 1) {
+            popup = PopupWindow(
+                (rect.right - rect.left).toInt(),
+                ((rect.bottom - rect.top) * 2).toInt()
+            )
+            popup.setClippingEnabled(false)
+            val view = TextView(ctx)
+            view.gravity = Gravity.CENTER
+            view.text = key
+            view.setTextColor(0xFF000000.toInt())
+            view.setBackgroundResource(R.drawable.popup)
+            popup.contentView = view
+            popup.showAsDropDown(keyboard, rect.left.toInt(), rect.bottom.toInt(), Gravity.NO_GRAVITY)
+        } else {
+            popup = PopupWindow(
+                (rect.right - rect.left).toInt(),
+                (rect.bottom - rect.top).toInt()
+            )
+            popup.setClippingEnabled(false)
+            val view = View(ctx)
+            view.setBackgroundResource(R.drawable.transparent_popup)
+            popup.contentView = view
+            popup.showAsDropDown(keyboard, rect.left.toInt(), rect.bottom.toInt(), Gravity.NO_GRAVITY)
+        }
+        val handler = Handler()
+        handler.postDelayed({
+            popup.dismiss()
+        }, 250)
         val connection = ctx.currentInputConnection
         when (key) {
             "SHIFT" -> {
