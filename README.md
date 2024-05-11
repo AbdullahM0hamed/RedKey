@@ -4,7 +4,7 @@ WIP Keyboard app
 
 - [x] - punctuation
 
-- [ ] - emoji support
+- [x] - emoji support
 
 - [ ] - settings
 
