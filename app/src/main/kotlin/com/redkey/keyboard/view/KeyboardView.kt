@@ -91,6 +91,9 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
         } else {
             page = 0
             keys = KeyboardUtils.getKeys(0)
+            scrollTo(0, 0)
+            EmojiHandler.scrollX = 0f
+            EmojiHandler.scrollY = 0f
             invalidate()
         }
     }

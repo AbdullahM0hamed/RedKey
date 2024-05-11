@@ -131,6 +131,7 @@ public class EmojiHandler  {
             white.setColor(0xFFFFFFFF);
             semiTransparent.setColor(0x55000000);
             semiTransparent.setTextSize(50);
+	    semiTransparentWhite.setTextSize(50);
             semiTransparentWhite.setColor(0xFFFFFFFF);
             semiTransparentWhite.setAlpha(150);
             paintInitialised = true;
@@ -197,9 +198,9 @@ public class EmojiHandler  {
         backspace.draw(canvas); 
         String abc = "abc"; 
         Rect measureWhite = new Rect();
-        white.getTextBounds(abc, 0, abc.length(), measureWhite); 
+        semiTransparentWhite.getTextBounds(abc, 0, abc.length(), measureWhite); 
         int heightDiff = bottomHeight - measureWhite.height();
-        canvas.drawText(abc, visibleRect.left + (diff / 2), visibleRect.bottom - (heightDiff / 2), semiTransparent);
+        canvas.drawText(abc, visibleRect.left + (diff / 2), visibleRect.bottom - (heightDiff / 2), semiTransparentWhite);
     }
 
     public static float scrollY = 0; 
