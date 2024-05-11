@@ -24,6 +24,7 @@ import android.view.inputmethod.InputConnection
 import android.inputmethodservice.InputMethodService
 import androidx.core.graphics.drawable.DrawableCompat
 import com.redkey.keyboard.R
+import com.redkey.keyboard.emoji.EmojiHandler
 import com.redkey.keyboard.util.KeyboardUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -31,7 +32,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
+class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.EmojiListener {
     public var editor: EditorInfo? = null
     public var page = 0
     public var keys = KeyboardUtils.getKeys(page)
@@ -40,12 +41,20 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         OFF, ON, LOCKED
     }
 
+    init {
+        EmojiHandler.listener = this
+    }
+
     var currentRects: MutableList<MutableList<Pair<String, RectF>>> = mutableListOf()
     var rowCoords: MutableList<Pair<Float, Float>> = mutableListOf()
     var job: Job? = null
     var keyHeld = false
     public var backspace = false
     override fun onTouchEvent(e: MotionEvent): Boolean {
+        if (page == 3) {
+            return EmojiHandler.onTouchEvent(this, e)
+        }
+
         if (e.action == MotionEvent.ACTION_DOWN) {
             for ((i, coord) in rowCoords.withIndex()) {
                 if (e.y >= coord.first && e.y <= coord.second) {
@@ -64,6 +73,21 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         }
 
         return true
+    }
+
+    override fun onEmojiClicked(emoji: String) {
+        writeText(ctx.currentInputConnection, emoji, 1)
+    }
+
+    override fun onButtonClicked(deleteKey: Boolean) {
+        if (deleteKey) {
+            deleteText(ctx.currentInputConnection, 1, 0)
+            backspace = true
+        } else {
+            page = 0
+            keys = KeyboardUtils.getKeys(0)
+            invalidate()
+        }
     }
 
     private fun getColumn(x: Float, i: Int): Int {
@@ -88,9 +112,24 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
         val vibrator = ctx.getSystemService(Vibrator::class.java)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
-            vibrator.vibrate(50)
+            vibrator?.vibrate(50)
+        }
+    }
+
+    override fun computeScroll() {
+        val scroller = EmojiHandler.scroller
+        if (scroller != null && scroller.computeScrollOffset()) {
+            if (scroller.getCurrX() > 0) {
+                EmojiHandler.scrollX = scroller.getCurrX().toFloat()
+                postInvalidate()
+                return
+            }
+
+            EmojiHandler.scrollY = scroller.getCurrY().toFloat()
+            scrollTo(0, scroller.getCurrY())
+            postInvalidate()
         }
     }
 
@@ -105,9 +144,13 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx) {
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
+        canvas.drawColor(0xFF000000.toInt())
+        if (page == 3 ) {
+            return EmojiHandler.onDraw(this, canvas)
+        }
+
         spaceShift = 0f
         spaceRow.clear()
-        canvas.drawColor(0xFF000000.toInt())
 
         val paint = Paint()
         paint.color = 0xFFFF0000.toInt()

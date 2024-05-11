@@ -87,7 +87,10 @@ object KeyboardUtils {
                 keyboard.backspace = true
             }
             "SPACE" -> keyboard.writeText(connection, " ", 1)
-            "EMOJIS" -> {}
+            "EMOJIS" -> {
+	        keyboard.page = 3
+		keyboard.invalidate()
+	    }
             "NUMBERS" -> {
                 keyboard.page += 1
                 keyboard.keys = getKeys(keyboard.page)
