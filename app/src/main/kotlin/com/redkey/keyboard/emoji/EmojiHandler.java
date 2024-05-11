@@ -2,6 +2,7 @@ package com.redkey.keyboard.emoji;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -121,8 +122,19 @@ public class EmojiHandler  {
 
     private static int bottom = 0; 
     private static Paint white = new Paint(); 
+    private static Paint semiTransparent = new Paint();
+    private static Paint semiTransparentWhite = new Paint();
     private static Rect r = new Rect(); 
+    private static boolean paintInitialised = false;
     public static void onDraw(View view, Canvas canvas) { 
+        if (!paintInitialised) {
+            white.setColor(0xFFFFFFFF);
+            semiTransparent.setColor(0x55000000);
+            semiTransparent.setTextSize(50);
+            semiTransparentWhite.setColor(0xFFFFFFFF);
+            semiTransparentWhite.setAlpha(150);
+            paintInitialised = true;
+        }
         initRect(view); 
         int rowCount = view.getWidth() / 100;
         int emojiWidth = view.getWidth() / rowCount; 
@@ -141,7 +153,6 @@ public class EmojiHandler  {
         }
 
         float scrollTop = visibleRect.top + (scrollY / bottom) * (visibleRect.height() - bottomHeight - emojiHeight);
-        white.setColor(0xFFFFFFFF);
         canvas.drawRoundRect( 
                 (float)(visibleRect.right - (emojiWidth / 10)), 
                 scrollTop,
@@ -152,8 +163,7 @@ public class EmojiHandler  {
                 white	
                 );
         canvas.restore(); 
-        white.setColor(0x55000000); 
-        canvas.drawRect(visibleRect.left, visibleRect.bottom - bottomHeight, visibleRect.right, visibleRect.bottom, white); 
+        canvas.drawRect(visibleRect.left, visibleRect.bottom - bottomHeight, visibleRect.right, visibleRect.bottom, semiTransparent); 
         float stickyWidth = visibleRect.width() / rowCount; 
         if (scrollX < 0) { 
             scrollX = 0;
@@ -171,7 +181,6 @@ public class EmojiHandler  {
 
         canvas.save(); 
         canvas.clipRect(visibleRect.left + stickyWidth, visibleRect.bottom - bottomHeight, visibleRect.right - stickyWidth, visibleRect.bottom);
-        white.setTextSize(50);
         drawTabs(view, canvas, emojiWidth); 
         diff = emojiWidth - r.width();
         Drawable backspace = view.getResources().getDrawable(R.drawable.ic_backspace);
@@ -187,10 +196,10 @@ public class EmojiHandler  {
         backspace.setBounds(bounds); 
         backspace.draw(canvas); 
         String abc = "abc"; 
-        Rect measuwhite = new Rect();
-        white.getTextBounds(abc, 0, abc.length(), measuwhite); 
-        int heightDiff = bottomHeight - measuwhite.height();
-        canvas.drawText(abc, visibleRect.left + (diff / 2), visibleRect.bottom - (heightDiff / 2), white);
+        Rect measureWhite = new Rect();
+        white.getTextBounds(abc, 0, abc.length(), measureWhite); 
+        int heightDiff = bottomHeight - measureWhite.height();
+        canvas.drawText(abc, visibleRect.left + (diff / 2), visibleRect.bottom - (heightDiff / 2), semiTransparent);
     }
 
     public static float scrollY = 0; 
@@ -370,8 +379,6 @@ public class EmojiHandler  {
             offset = visibleRect.right - (2 * width) - bottomWidth - visibleRect.left;
         }
         int baseLeft = visibleRect.left + (int)(width) - (int)(scrollX) + (int)(offset / 2);
-        white.setColor(0xFFFFFFFF); 
-        white.setAlpha(150); 
 
         for (int i = 0; i < tabIconsOutline.length; i++) { 
             Rect iconBounds = new Rect(
@@ -402,7 +409,7 @@ public class EmojiHandler  {
                         visibleRect.bottom, 
                         10, 
                         10, 
-                        white
+                        semiTransparentWhite
                         );
             }
 

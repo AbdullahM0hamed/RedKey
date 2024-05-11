@@ -41,8 +41,13 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
         OFF, ON, LOCKED
     }
 
+    private val keyBg = Paint()
+    private val textPaint = Paint()
     init {
         EmojiHandler.listener = this
+        keyBg.color = 0x66888888.toInt()
+        textPaint.color = 0xFFFF0000.toInt()
+        textPaint.textSize = 24f
     }
 
     var currentRects: MutableList<MutableList<Pair<String, RectF>>> = mutableListOf()
@@ -76,7 +81,7 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
     }
 
     override fun onEmojiClicked(emoji: String) {
-        writeText(ctx.currentInputConnection, emoji, 1)
+        ctx.currentInputConnection.commitText(emoji, 1)
     }
 
     override fun onButtonClicked(deleteKey: Boolean) {
@@ -142,9 +147,11 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
         setMeasuredDimension(width, (0.45 * height).toInt())
     }
 
+    private val bg = 0xFF000000.toInt()
+    private val margin = 10f
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        canvas.drawColor(0xFF000000.toInt())
+        canvas.drawColor(bg)
         if (page == 3 ) {
             return EmojiHandler.onDraw(this, canvas)
         }
@@ -152,13 +159,6 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
         spaceShift = 0f
         spaceRow.clear()
 
-        val paint = Paint()
-        paint.color = 0xFFFF0000.toInt()
-        val margin = 10f
-        paint.color = 0x66888888
-        val paint2 = Paint()
-        paint2.color = 0xFFFF0000.toInt()
-        paint2.textSize = 24f
         val largest = keys.sortedBy { it.size }.get(keys.size - 1)
         currentRects.clear()
         rowCoords.clear()
@@ -179,12 +179,12 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
                     keys.size
                 )
                 gridRow.add(Pair(key, rect))
-                canvas.drawRoundRect(rect, 20f, 20f, paint)
+                canvas.drawRoundRect(rect, 20f, 20f, keyBg)
                 KeyboardUtils.drawKey(
                     ctx,
                     this,
                     canvas,
-                    paint2,
+                    textPaint,
                     key,
                     rect
                 )
