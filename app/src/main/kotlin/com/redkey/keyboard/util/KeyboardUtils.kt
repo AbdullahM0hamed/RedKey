@@ -46,6 +46,7 @@ object KeyboardUtils {
 
     public fun getKeys(page: Int): List<List<String>> = default[page]
 
+    private val handler = Handler()
     public fun keyAction(ctx: InputMethodService, keyboard: KeyboardView, key: String, rect: RectF) {
         var popup: PopupWindow
         if (key.length == 1) {
@@ -60,6 +61,8 @@ object KeyboardUtils {
             view.setTextColor(0xFF000000.toInt())
             view.setBackgroundResource(R.drawable.popup)
             popup.contentView = view
+            popup.setTouchable(false)
+            popup.setFocusable(false)
             popup.showAsDropDown(keyboard, rect.left.toInt(), rect.bottom.toInt(), Gravity.NO_GRAVITY)
         } else {
             popup = PopupWindow(
@@ -70,12 +73,14 @@ object KeyboardUtils {
             val view = View(ctx)
             view.setBackgroundResource(R.drawable.transparent_popup)
             popup.contentView = view
+            popup.setTouchable(false)
+            popup.setFocusable(false)
             popup.showAsDropDown(keyboard, rect.left.toInt(), rect.bottom.toInt(), Gravity.NO_GRAVITY)
         }
-        val handler = Handler()
+
         handler.postDelayed({
             popup.dismiss()
-        }, 250)
+        }, 175)
         val connection = ctx.currentInputConnection
         when (key) {
             "SHIFT" -> {
@@ -88,9 +93,9 @@ object KeyboardUtils {
             }
             "SPACE" -> keyboard.writeText(connection, " ", 1)
             "EMOJIS" -> {
-	        keyboard.page = 3
-		keyboard.invalidate()
-	    }
+                keyboard.page = 3
+                keyboard.invalidate()
+            }
             "NUMBERS" -> {
                 keyboard.page += 1
                 keyboard.keys = getKeys(keyboard.page)
