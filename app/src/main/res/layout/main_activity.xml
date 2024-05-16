@@ -23,8 +23,8 @@
             style="@style/Widget.MaterialComponents.Toolbar.Primary" />
         </com.google.android.material.appbar.AppBarLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler"
+        <com.bluelinelabs.conductor.ChangeHandlerFrameLayout
+            android:id="@+id/controller_container"
             android:background="@android:color/black"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

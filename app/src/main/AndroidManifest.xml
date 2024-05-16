@@ -23,6 +23,7 @@
         </activity>
         <service
             android:name=".input.RedKeyInputMethodService"
+            android:exported="false"
             android:label="RedKey"
             android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter>
