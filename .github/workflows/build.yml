@@ -44,4 +44,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RedKey
-          path: app/build/outputs/apk/release/RedKey.apk
+          path: app/build/outputs/apk/debug/RedKey.apk
