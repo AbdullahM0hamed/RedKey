@@ -121,13 +121,13 @@ object KeyboardUtils {
             "ENTER" -> keyboard.writeText(connection, "\n", 1)
             else -> {
                 when (keyboard.shiftState) {
-                    ShiftState.OFF -> keyboard.writeText(connection, key.toLowerCase(), 1)
+                    ShiftState.OFF -> keyboard.writeText(connection, key.lowercase(), 1)
                     ShiftState.ON -> {
-                        keyboard.writeText(connection, key.toUpperCase(), 1)
+                        keyboard.writeText(connection, key.uppercase(), 1)
                         keyboard.shiftState = ShiftState.OFF
                         keyboard.invalidate()
                     }
-                    ShiftState.LOCKED -> keyboard.writeText(connection, key.toUpperCase(), 1)
+                    ShiftState.LOCKED -> keyboard.writeText(connection, key.uppercase(), 1)
                 }
             }
         }
@@ -197,9 +197,9 @@ object KeyboardUtils {
             }
             else -> {
                 val text = if (keyboard.shiftState == ShiftState.OFF) {
-                    key.toLowerCase()
+                    key.lowercase()
                 } else {
-                    key.toUpperCase()
+                    key.uppercase()
                 }
                 canvas.drawText(text, rect, paint)
             }

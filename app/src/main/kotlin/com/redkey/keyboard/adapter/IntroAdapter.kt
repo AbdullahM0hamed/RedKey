@@ -5,6 +5,7 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.redkey.keyboard.R
 import com.redkey.keyboard.controller.IntroController
 import com.redkey.keyboard.databinding.IntroScreenBinding
 
@@ -19,11 +20,12 @@ class IntroAdapter(val controller: IntroController) : RecyclerView.Adapter<Intro
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         with(holder) {
             binding.apply {
+                val ctx = itemView.context
                 when(position) {
                     0 -> { 
-                        binding.title.text = "Step 1"
-                        binding.subtitle.text = "Select RedKey in Language & Input settings"
-                        binding.button.text = "Enable"
+                        binding.title.text = ctx.getString(R.string.step_one)
+                        binding.subtitle.text = ctx.getString(R.string.select_redkey)
+                        binding.button.text = ctx.getString(R.string.enable)
                         binding.button.setOnClickListener {
                             controller.startActivityForResult(
                                 Intent(Settings.ACTION_INPUT_METHOD_SETTINGS),
@@ -32,14 +34,14 @@ class IntroAdapter(val controller: IntroController) : RecyclerView.Adapter<Intro
                         }
                     }
 		    1 -> {
-                        binding.title.text = "Step 2"
-                        binding.subtitle.text = "Select RedKey as your default keyboard"
-                        binding.button.text = "Select Input Method"
+                        binding.title.text = ctx.getString(R.string.step_two)
+                        binding.subtitle.text = ctx.getString(R.string.default_keyboard)
+                        binding.button.text = ctx.getString(R.string.input_method)
                     }
 		    2 -> {
-                        binding.title.text = "Setup finished"
-                        binding.subtitle.text = "You can move on to settings"
-                        binding.button.text = "Done"
+                        binding.title.text = ctx.getString(R.string.setup_finished)
+                        binding.subtitle.text = ctx.getString(R.string.move_on)
+                        binding.button.text = ctx.getString(R.string.done)
                     }
                 }
             }
