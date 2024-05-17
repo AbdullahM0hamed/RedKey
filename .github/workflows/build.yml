@@ -37,8 +37,8 @@ jobs:
 
       - name: Rename Artifact
         run: |
-          cd app/build/outputs/apk/release
-          mv app-release-unsigned.apk RedKey.apk
+          cd app/build/outputs/apk/debug
+          mv app-debug.apk RedKey.apk
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
