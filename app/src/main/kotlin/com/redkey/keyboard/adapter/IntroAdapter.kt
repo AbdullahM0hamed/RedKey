@@ -1,9 +1,11 @@
 package com.redkey.keyboard.adapter
 
+import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
 import com.redkey.keyboard.R
 import com.redkey.keyboard.controller.IntroController
@@ -33,12 +35,15 @@ class IntroAdapter(val controller: IntroController) : RecyclerView.Adapter<Intro
                             )
                         }
                     }
-		    1 -> {
+                    1 -> {
                         binding.title.text = ctx.getString(R.string.step_two)
                         binding.subtitle.text = ctx.getString(R.string.default_keyboard)
                         binding.button.text = ctx.getString(R.string.input_method)
+                        binding.button.setOnClickListener {
+                            (ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
+                        }
                     }
-		    2 -> {
+                    2 -> {
                         binding.title.text = ctx.getString(R.string.setup_finished)
                         binding.subtitle.text = ctx.getString(R.string.move_on)
                         binding.button.text = ctx.getString(R.string.done)

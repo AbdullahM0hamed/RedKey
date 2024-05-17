@@ -1,8 +1,10 @@
 package com.redkey.keyboard.controller
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +18,7 @@ import com.redkey.keyboard.databinding.IntroBinding
 
 class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
     private var pager: ViewPager2? = null
+    private var movedToLast: Boolean = false
 
     constructor(bundle: Bundle?) : this(null, bundle)
     override fun onCreateView(
@@ -29,7 +32,7 @@ class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
         binding.apply {
             TabLayoutMediator(tabs, viewpager) { _, _ -> }.attach()
         }
-	return binding.root
+        return binding.root
     }
 
     override fun onActivityResult(requestCode: Int, result: Int, data: Intent?) {
@@ -49,6 +52,22 @@ class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
             holder?.binding?.apply {
                 button.visibility = View.GONE
                 complete.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    public fun onWindowFocusChanged(focused: Boolean) {
+        if (!movedToLast && focused && ctx != null) {
+            val imeManager = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val default = Settings.Secure.getString(ctx.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD)
+            if (default == "com.redkey.keyboard/.input.RedKeyInputMethodService") {
+                pager?.setCurrentItem(2)
+                movedToLast = true
+                val holder = (pager?.getChildAt(0) as RecyclerView)?.findViewHolderForAdapterPosition(1) as IntroAdapter.ViewHolder
+                holder?.binding?.apply {
+                    button.visibility = View.GONE
+                    complete.visibility = View.VISIBLE
+                }
             }
         }
     }

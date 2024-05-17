@@ -15,6 +15,7 @@ import com.redkey.keyboard.databinding.MainActivityBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var router: Router
+    private var intro: IntroController? = null
 
     override fun onCreate(savedInstance: Bundle?) {
         super.onCreate(savedInstance)
@@ -39,11 +40,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!enabled) {
-            router.setRoot(RouterTransaction.with(IntroController(this, savedInstance)))
-            /*val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            Toast.makeText(this, "Enable RedKey", 5).show()*/
+            intro = IntroController(this, savedInstance)
+            val curIntro = intro
+            router.setRoot(RouterTransaction.with(curIntro!!))
         }
     }
 
@@ -51,5 +50,9 @@ class MainActivity : AppCompatActivity() {
         if (!router.handleBack()) {
             super.onBackPressed()
         }
+    }
+
+    override fun onWindowFocusChanged(focused: Boolean) {
+        intro?.onWindowFocusChanged(focused)
     }
 }
