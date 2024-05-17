@@ -33,7 +33,7 @@ jobs:
           echo "::add-matcher::.github/kotlin-warning-matcher.json"
           rm gradle.properties
           echo -e "android.enableJetifier=true\nandroid.useAndroidX=true" > gradle.properties
-          ./gradlew assembleRelease
+          ./gradlew assembleDebug
 
       - name: Rename Artifact
         run: |
