@@ -3,6 +3,7 @@ package com.redkey.keyboard.controller
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
@@ -15,10 +16,18 @@ import com.bluelinelabs.conductor.Controller
 import com.google.android.material.tabs.TabLayoutMediator
 import com.redkey.keyboard.adapter.IntroAdapter
 import com.redkey.keyboard.databinding.IntroBinding
+import com.redkey.keyboard.receiver.KeyboardChangeReceiver
 
 class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
     private var pager: ViewPager2? = null
     private var movedToLast: Boolean = false
+    private var receiver: KeyboardChangeReceiver? = null
+
+    init {
+        val filter = IntentFilter("android.intent.action.INPUT_METHOD_CHANGED")
+        receiver = KeyboardChangeReceiver()
+        ctx?.registerReceiver(receiver, filter)
+    }
 
     constructor(bundle: Bundle?) : this(null, bundle)
     override fun onCreateView(
@@ -36,7 +45,6 @@ class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
     }
 
     override fun onActivityResult(requestCode: Int, result: Int, data: Intent?) {
-        android.widget.Toast.makeText(ctx, "Test", 5).show()
         var enabled = false
         val manager = ctx?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         for (inputmethod in manager.getEnabledInputMethodList()) {
@@ -56,18 +64,15 @@ class IntroController(val ctx: Context?, bundle: Bundle?) : Controller(bundle) {
         }
     }
 
-    public fun onWindowFocusChanged(focused: Boolean) {
-        if (!movedToLast && focused && ctx != null) {
-            val imeManager = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            val default = Settings.Secure.getString(ctx.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD)
-            if (default == "com.redkey.keyboard/.input.RedKeyInputMethodService") {
-                pager?.setCurrentItem(2)
-                movedToLast = true
-                val holder = (pager?.getChildAt(0) as RecyclerView)?.findViewHolderForAdapterPosition(1) as IntroAdapter.ViewHolder
-                holder?.binding?.apply {
-                    button.visibility = View.GONE
-                    complete.visibility = View.VISIBLE
-                }
+    public fun onInputMethodChanged() {
+        if (!movedToLast && ctx != null) {
+            ctx.unregisterReceiver(receiver)
+            pager?.setCurrentItem(2)
+            movedToLast = true
+            val holder = (pager?.getChildAt(0) as RecyclerView)?.findViewHolderForAdapterPosition(1) as IntroAdapter.ViewHolder
+            holder?.binding?.apply {
+                button.visibility = View.GONE
+                complete.visibility = View.VISIBLE
             }
         }
     }

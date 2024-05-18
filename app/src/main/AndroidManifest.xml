@@ -35,5 +35,13 @@
                 android:name="android.view.im"
                 android:resource="@xml/method"/>
         </service>
+        <receiver
+            android:name=".receiver.KeyboardChangerReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.INPUT_METHOD_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

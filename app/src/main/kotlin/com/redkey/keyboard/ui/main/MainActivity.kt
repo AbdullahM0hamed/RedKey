@@ -52,7 +52,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onWindowFocusChanged(focused: Boolean) {
-        intro?.onWindowFocusChanged(focused)
+    override fun onNewIntent(intent: Intent) {
+        if (intent.getStringExtra("default") != null) {
+            intro?.onInputMethodChanged()
+        }
     }
 }
