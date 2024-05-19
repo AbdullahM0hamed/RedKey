@@ -298,35 +298,11 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
     public fun deleteText(conn: InputConnection, before: Int, after: Int) {
         keyHeld = true
         job = GlobalScope.launch(Dispatchers.Main.immediate) {
+            conn.erase(0, 0)
+            delay(800L)
             while (keyHeld) {
-                delay(500L)
-                val extractedText = conn.getExtractedText(ExtractedTextRequest(), 0)
-                var charPos = 0
-                try {
-                    charPos = extractedText.selectionStart
-                } catch (e: Exception) {}
-                if (charPos == 0) {
-                    break
-                }
-                var beforeCursor = extractedText.text[charPos - 1]
-                while (beforeCursor == ' ') {
-                    conn.erase(before, after)
-                    charPos -= 1
-                    if (charPos == 0) {
-                        break
-                    }
-                    beforeCursor = extractedText.text[charPos - 1]
-                }
-
-                beforeCursor = extractedText.text[charPos - 1]
-                while (beforeCursor != ' ') {
-                    conn.erase(before, after)
-                    charPos -= 1
-                    if (charPos == 0) {
-                        break
-                    }
-                    beforeCursor = extractedText.text[charPos - 1]
-                }
+                conn.erase(30, after)
+                delay(100L)
             }
         }
     }
