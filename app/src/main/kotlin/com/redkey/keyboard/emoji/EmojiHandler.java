@@ -273,6 +273,12 @@ public class EmojiHandler  {
                             scrollY = 0;
                             getView().scrollTo(0, 0);
                         } else { 
+                            if (x >= visibleRect.right - width) {
+                                scrollX = 0;
+                                scrollY = 0;
+                                getView().scrollTo(0, 0);
+                                getView().postInvalidate();
+                            }
                             listener.onButtonClicked(x >= visibleRect.right - width);
                         }
                     } else {

@@ -128,7 +128,7 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
 
     override fun computeScroll() {
         val scroller = EmojiHandler.scroller
-        if (scroller != null && scroller.computeScrollOffset()) {
+        if (scroller != null && scroller.computeScrollOffset() && page == 3) {
             if (scroller.getCurrX() > 0) {
                 EmojiHandler.scrollX = scroller.getCurrX().toFloat()
                 postInvalidate()
@@ -154,7 +154,7 @@ class KeyboardView(val ctx: InputMethodService) : ViewGroup(ctx), EmojiHandler.E
     private val margin = 10f
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        canvas.drawColor(bg)
+        //canvas.drawColor(bg)
         if (page == 3 ) {
             return EmojiHandler.onDraw(this, canvas)
         }
